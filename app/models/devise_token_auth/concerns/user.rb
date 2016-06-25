@@ -186,6 +186,10 @@ module DeviseTokenAuth::Concerns::User
 
     # client may use expiry to prevent validation request if expired
     # must be cast as string or headers will break
+    # binding.pry
+    if self.tokens[client_id].nil? && client_id == 'default' || token.nil?
+      return create_new_auth_token
+    end
     expiry = self.tokens[client_id]['expiry'] || self.tokens[client_id][:expiry]
 
     max_clients = DeviseTokenAuth.max_number_of_devices

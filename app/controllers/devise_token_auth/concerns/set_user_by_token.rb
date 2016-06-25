@@ -82,11 +82,12 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
     # Generate new client_id with existing authentication
     @client_id = nil unless @used_auth_by_token
+    return if response.code.to_i >= 300
 
     if @used_auth_by_token and not DeviseTokenAuth.change_headers_on_each_request
       # should not append auth header if @resource related token was
       # cleared by sign out in the meantime
-      return if @resource.reload.tokens[@client_id].nil?
+      return if @resource.reload.tokens[@client_id].nil? && @client_id != 'default'
 
       auth_header = @resource.build_auth_header(@token, @client_id)
 
@@ -100,8 +101,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
       @resource.with_lock do
         # should not append auth header if @resource related token was
         # cleared by sign out in the meantime
-        return if @used_auth_by_token && @resource.tokens[@client_id].nil?
-
+        return if @client_id != 'default' && @used_auth_by_token && @resource.tokens[@client_id].nil?
         # determine batch request status after request processing, in case
         # another processes has updated it during that processing
         @is_batch_request = is_batch_request?(@resource, @client_id)
